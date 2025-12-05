@@ -3,6 +3,9 @@ package com.proofme.manspitub.ProofMeProject.model;
 import java.util.Date;
 import java.util.List;
 
+import com.proofme.manspitub.ProofMeProject.enums.Role;
+import com.proofme.manspitub.ProofMeProject.enums.UserScore;
+
 import ch.qos.logback.core.read.ListAppender;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

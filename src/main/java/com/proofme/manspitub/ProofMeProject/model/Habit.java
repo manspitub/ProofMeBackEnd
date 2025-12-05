@@ -3,6 +3,10 @@ package com.proofme.manspitub.ProofMeProject.model;
 import java.util.Date;
 import java.util.List;
 
+import com.proofme.manspitub.ProofMeProject.enums.HabitFrequency;
+import com.proofme.manspitub.ProofMeProject.enums.HabitStatus;
+import com.proofme.manspitub.ProofMeProject.enums.HabitType;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

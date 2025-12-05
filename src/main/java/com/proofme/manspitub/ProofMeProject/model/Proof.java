@@ -2,6 +2,9 @@ package com.proofme.manspitub.ProofMeProject.model;
 
 import java.util.Date;
 
+import com.proofme.manspitub.ProofMeProject.enums.ProofStatus;
+import com.proofme.manspitub.ProofMeProject.enums.ProofType;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
