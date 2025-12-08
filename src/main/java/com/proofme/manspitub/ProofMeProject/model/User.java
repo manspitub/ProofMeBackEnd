@@ -1,5 +1,6 @@
 package com.proofme.manspitub.ProofMeProject.model;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -54,13 +55,13 @@ public class User implements UserDetails {
 	@Email(message = "Debe ser un email válido")
 	@Column(name = "correo", nullable = false, unique = true)
 	private String email;
-	
+
 	@NotNull(message = "La edad no puede estar vacía")
 	@Min(value = 18, message = "La edad debe ser al menos 18 años")
 	@Max(value = 100, message = "La edad no puede ser mayor a 100 años")
 	@Column(name = "edad", nullable = false)
 	private Integer age;
-	
+
 	@Column(name = "email_confirmado")
 	private Boolean emailConfirmed = false;
 
@@ -83,7 +84,7 @@ public class User implements UserDetails {
 
 	@Column(name = "descripcion", length = 500)
 	private String description;
-	
+
 	@Column(name = "habilitar_notificaciones", nullable = false)
 	private boolean notificationsEnabled = true;
 
@@ -109,22 +110,14 @@ public class User implements UserDetails {
 	// Constructores
 	// --------------------
 
-	// Constructor vacío
 	public User() {
-	}
 
-	public User(String name, String surname, String email, String password, String imageURL, String description,
-			Role role, Integer age) {
-
-		this.name = name;
-		this.surname = surname;
-		this.email = email;
-		this.password = password;
-		this.imageURL = imageURL;
-		this.description = description;
-		this.role = role;
-		this.age = age;
-		this.createdAt = new Date();
+		super();
+		this.role = Role.USER;
+		this.habits = new ArrayList<Habit>();
+		this.supporterAssignments = new ArrayList<SupporterAssignment>();
+		this.validatedProofs = new ArrayList<Proof>();
+		this.notifications = new ArrayList<Notification>();
 	}
 
 	// --------------------
@@ -242,7 +235,6 @@ public class User implements UserDetails {
 	public void setAge(Integer age) {
 		this.age = age;
 	}
-	
 
 	public Boolean getEmailConfirmed() {
 		return emailConfirmed;

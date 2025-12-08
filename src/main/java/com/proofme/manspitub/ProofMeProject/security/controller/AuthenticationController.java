@@ -86,7 +86,12 @@ public class AuthenticationController {
 
 			emailService.sendConfirmationEmail(userCreated.getEmail(), userCreated.getName(), userCreated.getSurname(),
 					jwt, isCreatedByAdmin, newUser.getPassword());
-			return ResponseEntity.status(HttpStatus.CREATED).body(userDtoConverter.convertUserDto(userCreated));
+			
+			System.out.println(new ApiResponse<>("Success",
+					"Usuario creado correctamente", userDtoConverter.convertUserDto(userCreated)));
+			return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>("Success",
+					"Usuario creado correctamente", userDtoConverter.convertUserDto(userCreated)));
+
 		} catch (Exception e) {
 			throw e;
 		}
@@ -100,7 +105,7 @@ public class AuthenticationController {
 
 			userService.confirmUserAccount(authentication);
 
-			return ResponseEntity.ok(new ApiResponse<>("success", "Cuenta activada con éxito", null));
+			return ResponseEntity.ok(new ApiResponse<>("success", "Cuenta activada con éxito"));
 
 		} catch (Exception e) {
 			throw e;

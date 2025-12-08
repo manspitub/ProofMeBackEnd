@@ -3,6 +3,7 @@ package com.proofme.manspitub.ProofMeProject.service.impl;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +24,7 @@ import com.proofme.manspitub.ProofMeProject.service.EmailService;
 import com.proofme.manspitub.ProofMeProject.service.UserService;
 
 @Service
+@Primary
 public class UserServiceImpl implements UserService {
 
 	@Autowired
