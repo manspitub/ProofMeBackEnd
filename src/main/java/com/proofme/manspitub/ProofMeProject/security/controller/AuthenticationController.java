@@ -1,5 +1,8 @@
 package com.proofme.manspitub.ProofMeProject.security.controller;
 
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -7,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,10 +23,12 @@ import com.proofme.manspitub.ProofMeProject.dto.UserDtoConverter;
 import com.proofme.manspitub.ProofMeProject.enums.Role;
 import com.proofme.manspitub.ProofMeProject.exception.EmailNotConfirmedException;
 import com.proofme.manspitub.ProofMeProject.model.User;
+import com.proofme.manspitub.ProofMeProject.repository.UserRepository;
 import com.proofme.manspitub.ProofMeProject.security.dto.CreateUserDto;
 import com.proofme.manspitub.ProofMeProject.security.dto.LoginDtoUser;
 import com.proofme.manspitub.ProofMeProject.security.jwt.JwtProvider;
 import com.proofme.manspitub.ProofMeProject.security.jwt.JwtUserResponse;
+import com.proofme.manspitub.ProofMeProject.security.oauth.service.CustomOAuth2UserService;
 import com.proofme.manspitub.ProofMeProject.service.EmailService;
 import com.proofme.manspitub.ProofMeProject.service.UserService;
 
@@ -40,6 +46,10 @@ public class AuthenticationController {
 	private EmailService emailService;
 	@Autowired
 	private UserDtoConverter userDtoConverter;
+	@Autowired
+	private CustomOAuth2UserService oAuth2UserService;
+	@Autowired
+	private UserRepository userRepository;
 
 	// Para loguearte debes tener el atributo confirmed a true
 	// LOGIN
@@ -86,9 +96,7 @@ public class AuthenticationController {
 
 			emailService.sendConfirmationEmail(userCreated.getEmail(), userCreated.getName(), userCreated.getSurname(),
 					jwt, isCreatedByAdmin, newUser.getPassword());
-			
-			System.out.println(new ApiResponse<>("Success",
-					"Usuario creado correctamente", userDtoConverter.convertUserDto(userCreated)));
+
 			return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse<>("Success",
 					"Usuario creado correctamente", userDtoConverter.convertUserDto(userCreated)));
 
@@ -105,11 +113,48 @@ public class AuthenticationController {
 
 			userService.confirmUserAccount(authentication);
 
-			return ResponseEntity.ok(new ApiResponse<>("success", "Cuenta activada con éxito"));
+			return ResponseEntity.ok(new ApiResponse<>("Success", "Cuenta activada con éxito"));
 
 		} catch (Exception e) {
 			throw e;
 		}
 	}
+
+	// DTO simple para recibir el token de Google
+	public static class TokenRequest {
+		public String token;
+	}
+
+	@PostMapping("/google-login")
+	public ResponseEntity<ApiResponse<JwtUserResponse>> googleLogin(@RequestBody TokenRequest request) {
+
+	    // Obtener datos del usuario desde Google por access_token
+	    OAuth2User oauth2User = oAuth2UserService.loadUserFromAccessToken(request.token);
+
+	    Optional<User> userOpt = userRepository.findFirstByEmail(oauth2User.getAttribute("email"));
+	    if (userOpt.isEmpty()) {
+	        throw new RuntimeException("Usuario no encontrado");
+	    }
+	    User user = userOpt.get();
+
+	    // Crear Authentication manual para generar JWT
+	    Authentication auth = new UsernamePasswordAuthenticationToken(
+	            user,
+	            null,
+	            oauth2User.getAuthorities()
+	    );
+
+	    // Generar JWT
+	    String jwt = jwtProvider.generateToken(auth);
+
+	    // Crear respuesta final 
+	    JwtUserResponse response = convertUserClientToJwtUserResponse(user, jwt);
+
+	    return ResponseEntity.ok(
+	            new ApiResponse<>("Success", "Login correcto", response)
+	    );
+	}
+
+
 
 }

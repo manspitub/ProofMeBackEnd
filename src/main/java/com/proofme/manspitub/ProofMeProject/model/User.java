@@ -56,10 +56,9 @@ public class User implements UserDetails {
 	@Column(name = "correo", nullable = false, unique = true)
 	private String email;
 
-	@NotNull(message = "La edad no puede estar vacía")
-	@Min(value = 18, message = "La edad debe ser al menos 18 años")
-	@Max(value = 100, message = "La edad no puede ser mayor a 100 años")
-	@Column(name = "edad", nullable = false)
+	@Min(value = 18, message = "Debes tener al menos 18 años")
+	@Max(value = 100, message = "La edad no puede ser mayor de 100 años")
+	@Column(name = "edad")
 	private Integer age;
 
 	@Column(name = "email_confirmado")

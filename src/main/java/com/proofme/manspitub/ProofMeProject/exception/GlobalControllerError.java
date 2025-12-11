@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,6 +13,7 @@ import org.springframework.mail.MailParseException;
 import org.springframework.mail.MailSendException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -142,6 +144,42 @@ public class GlobalControllerError {
 	public ResponseEntity<ApiError> handleMalformedJwtException(MalformedJwtException e) {
 		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, LocalDateTime.now(), e.getMessage());
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
+	}
+
+	@ExceptionHandler(InvalidGoogleTokenException.class)
+	public ResponseEntity<ApiError> handleInvalidGoogleToken(InvalidGoogleTokenException e) {
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, LocalDateTime.now(), e.getMessage());
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
+	}
+
+	@ExceptionHandler(GoogleUserInfoException.class)
+	public ResponseEntity<ApiError> handleGoogleUserInfoException(GoogleUserInfoException e) {
+		ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, LocalDateTime.now(), e.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+	}
+
+	// Excepción lanzada cuando el método HTTP no está permitido (GET, POST, etc.)
+	@ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+	public ResponseEntity<ApiError> handleMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+
+		String supportedMethods = (e.getSupportedHttpMethods() != null)
+				? e.getSupportedHttpMethods().stream().map(HttpMethod::name) // ← CORRECCIÓN AQUÍ
+						.collect(Collectors.joining(", "))
+				: "Ninguno";
+
+		String message = "Método HTTP no permitido. Métodos soportados: " + supportedMethods;
+
+		ApiError apiError = new ApiError(HttpStatus.METHOD_NOT_ALLOWED, LocalDateTime.now(), message);
+
+		return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(apiError);
+	}
+
+	// Excepción genérica (cualquier error no contemplado arriba)
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ApiError> handleGenericException(Exception e) {
+		ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, LocalDateTime.now(),
+				"Ha ocurrido un error inesperado. Contacta con el administrador.");
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiError);
 	}
 
 }

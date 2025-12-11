@@ -18,6 +18,8 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.proofme.manspitub.ProofMeProject.security.jwt.JwtAccessDeniedHandler;
 import com.proofme.manspitub.ProofMeProject.security.jwt.JwtAuthorizationFilter;
+import com.proofme.manspitub.ProofMeProject.security.oauth.handler.OAuth2AuthenticationSuccessHandler;
+import com.proofme.manspitub.ProofMeProject.security.oauth.service.CustomOAuth2UserService;
 import com.proofme.manspitub.ProofMeProject.service.UserService;
 import com.proofme.manspitub.ProofMeProject.service.impl.UserServiceImpl;
 
@@ -33,10 +35,11 @@ public class SecurityConfig {
 	private JwtAuthorizationFilter filter;
 	@Autowired
 	private JwtAccessDeniedHandler accessDeniedHandler;
+	 
 
 	@Bean
 	UserService userDetailsService() {
-		return new UserServiceImpl();
+	    return new UserServiceImpl();
 	}
 
 	@Bean
@@ -47,22 +50,41 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2AuthenticationSuccessHandler oauth2SuccessHandler,
+		    CustomOAuth2UserService oauth2UserService ) throws Exception {
 
-		http.csrf(csrf -> csrf.disable())
+		http
+				// Deshabilitar CSRF porque usamos JWT (stateless)
+				.csrf(csrf -> csrf.disable())
+
+				// Manejo de excepciones personalizadas
 				.exceptionHandling(exception -> exception.authenticationEntryPoint(authenticationEntryPoint)
 						.accessDeniedHandler(accessDeniedHandler))
+
+				// JWT → Sin sesiones
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+				// Autorización de rutas
 				.authorizeHttpRequests(auth -> auth
-						// Rutas públicas
+						// Rutas públicas de autenticación
 						.requestMatchers("/api/auth/**").permitAll()
 
-						// TODO lo demás requiere autenticación
+						// OAuth2 (público hasta que Google devuelva callback)
+						.requestMatchers("/oauth2/**", "/login/oauth2/**").permitAll()
+
+						// Cualquier ruta de tu API requiere autenticación
 						.requestMatchers("/api/**").authenticated()
 
-						// Por si hubiese rutas fuera de /api
-						.anyRequest().permitAll());
+						// Rutas fuera de /api → permitidas (si las hubiera)
+						.anyRequest().permitAll())
 
+				// Configuración de OAuth2 con Google
+				.oauth2Login(oauth2 -> oauth2.authorizationEndpoint(config -> config.baseUri("/oauth2/authorize"))
+						.redirectionEndpoint(config -> config.baseUri("/login/oauth2/code/*"))
+						.userInfoEndpoint(userInfo -> userInfo.userService(oauth2UserService))
+						.successHandler(oauth2SuccessHandler));
+
+		// Filtro JWT antes del filtro de usuario/contraseña de Spring
 		return http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class).build();
 	}
 
