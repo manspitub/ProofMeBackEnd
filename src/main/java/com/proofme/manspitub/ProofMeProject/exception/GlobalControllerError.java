@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.security.SignatureException;
@@ -146,16 +147,14 @@ public class GlobalControllerError {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
 	}
 
-	@ExceptionHandler(InvalidGoogleTokenException.class)
-	public ResponseEntity<ApiError> handleInvalidGoogleToken(InvalidGoogleTokenException e) {
-		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, LocalDateTime.now(), e.getMessage());
-		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
-	}
 
-	@ExceptionHandler(GoogleUserInfoException.class)
-	public ResponseEntity<ApiError> handleGoogleUserInfoException(GoogleUserInfoException e) {
-		ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, LocalDateTime.now(), e.getMessage());
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+	// Excepción lanzada cuando la ruta solicitada no existe
+	@ExceptionHandler(NoHandlerFoundException.class)
+	public ResponseEntity<ApiError> handleNoHandlerFoundException(
+			org.springframework.web.servlet.NoHandlerFoundException e) {
+		ApiError apiError = new ApiError(HttpStatus.NOT_FOUND, LocalDateTime.now(),
+				"La ruta solicitada no existe: " + e.getRequestURL());
+		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
 	}
 
 	// Excepción lanzada cuando el método HTTP no está permitido (GET, POST, etc.)
@@ -180,6 +179,24 @@ public class GlobalControllerError {
 		ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR, LocalDateTime.now(),
 				"Ha ocurrido un error inesperado. Contacta con el administrador.");
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiError);
+	}
+
+	// Maneja la excepción cuando el token de Google es inválido o expirado
+	@ExceptionHandler(InvalidGoogleTokenException.class)
+	public ResponseEntity<ApiError> handleInvalidGoogleToken(InvalidGoogleTokenException e) {
+
+		ApiError apiError = new ApiError(HttpStatus.UNAUTHORIZED, LocalDateTime.now(), e.getMessage());
+
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
+	}
+
+	// Maneja errores al obtener la información del usuario desde Google
+	@ExceptionHandler(GoogleUserInfoException.class)
+	public ResponseEntity<ApiError> handleGoogleUserInfoException(GoogleUserInfoException e) {
+
+		ApiError apiError = new ApiError(HttpStatus.BAD_REQUEST, LocalDateTime.now(), e.getMessage());
+
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
 	}
 
 }

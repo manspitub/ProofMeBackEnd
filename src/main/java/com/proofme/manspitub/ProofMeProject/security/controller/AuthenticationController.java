@@ -147,7 +147,9 @@ public class AuthenticationController {
 	    // Generar JWT
 	    String jwt = jwtProvider.generateToken(auth);
 
-	    // Crear respuesta final 
+
+
+
 	    JwtUserResponse response = convertUserClientToJwtUserResponse(user, jwt);
 
 	    return ResponseEntity.ok(
