@@ -1,7 +1,9 @@
-package com.proofme.manspitub.ProofMeProject.model;
+package com.proofme.manspitub.ProofMeProject.enums;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.proofme.manspitub.ProofMeProject.model.User;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;

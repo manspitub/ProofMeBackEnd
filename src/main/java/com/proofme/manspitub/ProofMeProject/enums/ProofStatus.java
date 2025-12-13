@@ -1,4 +1,4 @@
-package com.proofme.manspitub.ProofMeProject.model;
+package com.proofme.manspitub.ProofMeProject.enums;
 
 public enum ProofStatus {
 	PENDING,

@@ -2,6 +2,8 @@ package com.proofme.manspitub.ProofMeProject.model;
 
 import java.util.Date;
 
+import com.proofme.manspitub.ProofMeProject.enums.RelapseImpact;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

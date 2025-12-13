@@ -1,7 +1,16 @@
 package com.proofme.manspitub.ProofMeProject.model;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.proofme.manspitub.ProofMeProject.enums.Role;
+import com.proofme.manspitub.ProofMeProject.enums.UserScore;
 
 import ch.qos.logback.core.read.ListAppender;
 import jakarta.persistence.CascadeType;
@@ -17,13 +26,16 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "Usuario")
-public class User {
+public class User implements UserDetails {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -44,6 +56,14 @@ public class User {
 	@Column(name = "correo", nullable = false, unique = true)
 	private String email;
 
+	@Min(value = 18, message = "Debes tener al menos 18 años")
+	@Max(value = 100, message = "La edad no puede ser mayor de 100 años")
+	@Column(name = "edad")
+	private Integer age;
+
+	@Column(name = "email_confirmado")
+	private Boolean emailConfirmed = false;
+
 	@NotBlank(message = "La contraseña no puede estar vacía")
 	@Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
 	@Column(name = "contrasena", nullable = false)
@@ -63,7 +83,10 @@ public class User {
 
 	@Column(name = "descripcion", length = 500)
 	private String description;
-	
+
+	@Column(name = "habilitar_notificaciones", nullable = false)
+	private boolean notificationsEnabled = true;
+
 	@OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private UserScore userScore;
 
@@ -86,21 +109,14 @@ public class User {
 	// Constructores
 	// --------------------
 
-	// Constructor vacío
 	public User() {
-	}
 
-	public User(String name, String surname, String email, String password, String imageURL, String description,
-			Role role) {
-
-		this.name = name;
-		this.surname = surname;
-		this.email = email;
-		this.password = password;
-		this.imageURL = imageURL;
-		this.description = description;
-		this.role = role;
-		this.createdAt = new Date();
+		super();
+		this.role = Role.USER;
+		this.habits = new ArrayList<Habit>();
+		this.supporterAssignments = new ArrayList<SupporterAssignment>();
+		this.validatedProofs = new ArrayList<Proof>();
+		this.notifications = new ArrayList<Notification>();
 	}
 
 	// --------------------
@@ -209,6 +225,60 @@ public class User {
 	@PrePersist
 	protected void onCreate() {
 		this.createdAt = new Date();
+	}
+
+	public Integer getAge() {
+		return age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+	public Boolean getEmailConfirmed() {
+		return emailConfirmed;
+	}
+
+	public void setEmailConfirmed(Boolean emailConfirmed) {
+		this.emailConfirmed = emailConfirmed;
+	}
+
+	@Override
+	public Collection<? extends GrantedAuthority> getAuthorities() {
+		return List.of(new SimpleGrantedAuthority(this.role.toString()));
+	}
+
+	@Override
+	public String getUsername() {
+		return this.email;
+	}
+
+	@Override
+	public boolean isAccountNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isAccountNonLocked() {
+		return true;
+	}
+
+	@Override
+	public boolean isCredentialsNonExpired() {
+		return true;
+	}
+
+	@Override
+	public boolean isEnabled() {
+		return true;
+	}
+
+	public boolean isNotificationsEnabled() {
+		return notificationsEnabled;
+	}
+
+	public void setNotificationsEnabled(boolean notificationsEnabled) {
+		this.notificationsEnabled = notificationsEnabled;
 	}
 
 }
